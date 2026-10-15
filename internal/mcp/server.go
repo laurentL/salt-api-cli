@@ -1,27 +1,22 @@
 package mcp
 
 import (
+	"context"
 	"io"
 	"log"
 	"os"
 
 	"github.com/laurentL/salt-api-cli/internal/config"
-	"github.com/mark3labs/mcp-go/server"
 )
 
 const DefaultLogPath = "/tmp/sapi_mcp.log"
 
 // NewServer constructs the MCPServer instance with all 12 Full-Access Salt tools registered.
-func NewServer(baseOverrides config.Overrides, version string, logger *log.Logger) *server.MCPServer {
+func NewServer(baseOverrides config.Overrides, version string, logger *log.Logger) *MCPServer {
 	if logger == nil {
 		logger = log.New(io.Discard, "", 0)
 	}
-	s := server.NewMCPServer(
-		"sapi",
-		version,
-		server.WithToolCapabilities(false),
-		server.WithRecovery(),
-	)
+	s := NewMCPServer("sapi", version, logger)
 	RegisterTools(s, baseOverrides, logger)
 	return s
 }
@@ -39,5 +34,5 @@ func ServeStdio(baseOverrides config.Overrides, version string) error {
 
 	logger.Printf("Starting sapi Full-Access MCP Server v%s...", version)
 	s := NewServer(baseOverrides, version, logger)
-	return server.ServeStdio(s, server.WithErrorLogger(logger))
+	return s.ServeReaderWriter(context.Background(), os.Stdin, os.Stdout)
 }

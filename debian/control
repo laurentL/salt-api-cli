@@ -1,17 +1,28 @@
 Source: sapi
 Section: admin
 Priority: optional
-Maintainer: Laurent Labatut <laurentL@users.noreply.github.com>
-Build-Depends: debhelper-compat (= 13)
-Standards-Version: 4.6.2
+Maintainer: Debian Go Packaging Team <team+pkg-go@tracker.debian.org>
+Uploaders: Laurent Labatut <laurentL@users.noreply.github.com>
+Build-Depends:
+ debhelper-compat (= 13),
+ golang-any,
+ golang-github-pelletier-go-toml.v2-dev,
+ golang-github-spf13-cobra-dev,
+ golang-github-spf13-pflag-dev,
+ golang-golang-x-term-dev,
+ golang-gopkg-yaml.v3-dev
+Standards-Version: 4.7.0
 Homepage: https://github.com/laurentL/salt-api-cli
 Vcs-Browser: https://github.com/laurentL/salt-api-cli
 Vcs-Git: https://github.com/laurentL/salt-api-cli.git
+XS-Go-Import-Path: github.com/laurentL/salt-api-cli
+Testsuite: autopkgtest-pkg-go
 Rules-Requires-Root: no
 
 Package: sapi
 Architecture: any
-Depends: ${misc:Depends}, ca-certificates
+Built-Using: ${misc:Built-Using}
+Depends: ${misc:Depends}, ${shlibs:Depends}, ca-certificates
 Description: SaltStack salt-api hybrid CLI client and Full-Access MCP Server
  sapi is a fast, standalone command-line client wrapping SaltStack's salt-api
  (netapi: rest_cherrypy / rest_tornado).
