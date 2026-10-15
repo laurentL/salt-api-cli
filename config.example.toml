@@ -1,0 +1,19 @@
+# Example configuration for sapi (~/.config/sapi/config.toml)
+default_profile = "prod"
+default_output = "pretty" # pretty | json | yaml | table
+
+[profiles.prod]
+url = "https://salt-master.prod.example.com:8000"
+username = "saltadmin"
+password_env = "SALT_PROD_PASSWORD" # or password_cmd = "secret-tool lookup service salt-prod"
+eauth = "pam"                       # pam | ldap | file | sharedsecret | auto
+verify_ssl = true
+timeout = "60s"
+
+[profiles.staging]
+url = "https://salt-master.staging.example.com:8000"
+username = "saltadmin"
+password_env = "SALT_STAGING_PASSWORD"
+eauth = "pam"
+verify_ssl = false
+timeout = "30s"

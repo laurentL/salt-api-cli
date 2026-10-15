@@ -1,0 +1,65 @@
+.TH "SAPI-KEY" "1" "2026-10-15" "sapi 1.0.0" "Salt API CLI Manual"
+.SH NAME
+sapi-key \- Manage Salt minion keys via Master wheel (list, accept, reject, delete, finger)
+.SH SYNOPSIS
+.B sapi sapi key
+.SH DESCRIPTION
+Manage Salt minion keys via Master wheel (list, accept, reject, delete, finger)
+.SH SUBCOMMANDS
+.TP
+\fBsapi key accept <match>\fR
+Accept pending minion key(s) matching glob/ID (wheel key.accept)
+.TP
+\fBsapi key delete <match>\fR
+Delete minion key(s) matching glob/ID (wheel key.delete)
+.TP
+\fBsapi key finger [match]\fR
+Display minion key fingerprints (wheel key.finger, default '*')
+.TP
+\fBsapi key list\fR
+List all minion keys grouped by status (wheel key.list_all)
+.TP
+\fBsapi key reject <match>\fR
+Reject minion key(s) matching glob/ID (wheel key.reject)
+.SH GLOBAL OPTIONS
+.TP
+\fB\-\-ca\-bundle\fR \fISTRING\fR
+Path to custom CA certificate bundle PEM (env: SALT_API_CA_BUNDLE)
+.TP
+\fB\-c\fR, \fB\-\-config\fR \fISTRING\fR
+Path to config.toml (default: ~/.config/sapi/config.toml)
+.TP
+\fB\-\-eauth\fR \fISTRING\fR
+Salt external auth backend: pam, ldap, file, sharedsecret (env: SALT_API_EAUTH)
+.TP
+\fB\-k\fR, \fB\-\-insecure\fR
+Skip TLS certificate verification (env: SALT_API_INSECURE)
+.TP
+\fB\-\-mcp\fR
+Start the integrated MCP server over stdio
+.TP
+\fB\-\-no\-color\fR
+Disable ANSI color output
+.TP
+\fB\-o\fR, \fB\-\-output\fR \fISTRING\fR
+Output format: pretty, json, yaml, table (env: SALT_API_OUTPUT)
+.TP
+\fB\-\-password\fR \fISTRING\fR
+Salt API password (env: SALT_API_PASSWORD)
+.TP
+\fB\-p\fR, \fB\-\-profile\fR \fISTRING\fR
+Configuration profile name (env: SALT_API_PROFILE)
+.TP
+\fB\-t\fR, \fB\-\-timeout\fR \fIDURATION\fR
+HTTP request timeout, e.g. 60s (env: SALT_API_TIMEOUT)
+.TP
+\fB\-\-token\fR \fISTRING\fR
+Explicit X\-Auth\-Token override (env: SALT_API_TOKEN)
+.TP
+\fB\-u\fR, \fB\-\-url\fR \fISTRING\fR
+Salt API base URL, e.g. https://salt:8000 (env: SALT_API_URL)
+.TP
+\fB\-\-user\fR \fISTRING\fR
+Salt API username (env: SALT_API_USER)
+.SH SEE ALSO
+\fBsapi\fR(1)

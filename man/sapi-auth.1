@@ -1,0 +1,59 @@
+.TH "SAPI-AUTH" "1" "2026-10-15" "sapi 1.0.0" "Salt API CLI Manual"
+.SH NAME
+sapi-auth \- Manage Salt NetAPI authentication tokens (login, status, logout)
+.SH SYNOPSIS
+.B sapi sapi auth
+.SH DESCRIPTION
+Manage Salt NetAPI authentication tokens (login, status, logout)
+.SH SUBCOMMANDS
+.TP
+\fBsapi auth login\fR
+Authenticate with /login and cache a fresh X\-Auth\-Token
+.TP
+\fBsapi auth logout\fR
+Invalidate current token via /logout and clear cached entry
+.TP
+\fBsapi auth status\fR
+Inspect cached X\-Auth\-Tokens and their expiration status
+.SH GLOBAL OPTIONS
+.TP
+\fB\-\-ca\-bundle\fR \fISTRING\fR
+Path to custom CA certificate bundle PEM (env: SALT_API_CA_BUNDLE)
+.TP
+\fB\-c\fR, \fB\-\-config\fR \fISTRING\fR
+Path to config.toml (default: ~/.config/sapi/config.toml)
+.TP
+\fB\-\-eauth\fR \fISTRING\fR
+Salt external auth backend: pam, ldap, file, sharedsecret (env: SALT_API_EAUTH)
+.TP
+\fB\-k\fR, \fB\-\-insecure\fR
+Skip TLS certificate verification (env: SALT_API_INSECURE)
+.TP
+\fB\-\-mcp\fR
+Start the integrated MCP server over stdio
+.TP
+\fB\-\-no\-color\fR
+Disable ANSI color output
+.TP
+\fB\-o\fR, \fB\-\-output\fR \fISTRING\fR
+Output format: pretty, json, yaml, table (env: SALT_API_OUTPUT)
+.TP
+\fB\-\-password\fR \fISTRING\fR
+Salt API password (env: SALT_API_PASSWORD)
+.TP
+\fB\-p\fR, \fB\-\-profile\fR \fISTRING\fR
+Configuration profile name (env: SALT_API_PROFILE)
+.TP
+\fB\-t\fR, \fB\-\-timeout\fR \fIDURATION\fR
+HTTP request timeout, e.g. 60s (env: SALT_API_TIMEOUT)
+.TP
+\fB\-\-token\fR \fISTRING\fR
+Explicit X\-Auth\-Token override (env: SALT_API_TOKEN)
+.TP
+\fB\-u\fR, \fB\-\-url\fR \fISTRING\fR
+Salt API base URL, e.g. https://salt:8000 (env: SALT_API_URL)
+.TP
+\fB\-\-user\fR \fISTRING\fR
+Salt API username (env: SALT_API_USER)
+.SH SEE ALSO
+\fBsapi\fR(1)

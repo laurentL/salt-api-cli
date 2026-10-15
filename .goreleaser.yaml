@@ -1,0 +1,83 @@
+version: 2
+
+project_name: sapi
+
+before:
+  hooks:
+    - go mod tidy
+    - sh -c "go run ./cmd/sapi man --dir man"
+    - sh -c "mkdir -p completions && go run ./cmd/sapi completion bash > completions/sapi.bash && go run ./cmd/sapi completion zsh > completions/_sapi && go run ./cmd/sapi completion fish > completions/sapi.fish"
+
+builds:
+  - id: sapi
+    main: ./cmd/sapi
+    binary: sapi
+    env:
+      - CGO_ENABLED=0
+    goos:
+      - linux
+      - darwin
+      - windows
+    goarch:
+      - amd64
+      - arm64
+    ldflags:
+      - -s -w -X github.com/laurentL/salt-api-cli/internal/cli.Version={{.Version}}
+
+archives:
+  - id: default
+    formats:
+      - tar.gz
+    format_overrides:
+      - goos: windows
+        formats:
+          - zip
+    name_template: >-
+      {{ .ProjectName }}_
+      {{- .Version }}_
+      {{- .Os }}_
+      {{- .Arch }}
+    files:
+      - README.md
+      - LICENSE
+      - config.example.toml
+      - man/*.1
+
+nfpms:
+  - id: deb
+    package_name: sapi
+    vendor: laurentL
+    homepage: https://github.com/laurentL/salt-api-cli
+    maintainer: Laurent Labatut <laurentL@users.noreply.github.com>
+    description: SaltStack salt-api hybrid CLI client and Full-Access MCP Server
+    license: MIT
+    formats:
+      - deb
+    section: admin
+    priority: optional
+    dependencies:
+      - ca-certificates
+    contents:
+      - src: ./man/*.1
+        dst: /usr/share/man/man1
+      - src: ./completions/sapi.bash
+        dst: /usr/share/bash-completion/completions/sapi
+      - src: ./completions/_sapi
+        dst: /usr/share/zsh/vendor-completions/_sapi
+      - src: ./completions/sapi.fish
+        dst: /usr/share/fish/vendor_completions.d/sapi.fish
+      - src: ./config.example.toml
+        dst: /usr/share/doc/sapi/config.example.toml
+      - src: ./README.md
+        dst: /usr/share/doc/sapi/README.md
+
+checksum:
+  name_template: 'checksums.txt'
+
+changelog:
+  sort: asc
+  filters:
+    exclude:
+      - '^docs:'
+      - '^test:'
+      - '^chore:'

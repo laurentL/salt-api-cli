@@ -1,0 +1,223 @@
+.TH "SAPI" "1" "2026-10-15" "sapi 1.0.0" "Salt API CLI Manual"
+.SH NAME
+sapi \- SaltStack salt-api hybrid CLI client and Full-Access MCP Server
+.SH SYNOPSIS
+.B sapi
+[\fIGLOBAL FLAGS\fR] \fI<target>\fR \fI<function>\fR [\fIargs...\fR] [\fIkey=value...\fR]
+.br
+.B sapi
+[\fIGLOBAL FLAGS\fR] \fI<subcommand>\fR [\fISUBCOMMAND FLAGS\fR] [\fIargs...\fR]
+.br
+.B sapi
+\fBmcp\fR
+.SH DESCRIPTION
+\fBsapi\fR is a fast, standalone command-line client wrapping SaltStack's \fBsalt-api\fR (\fBnetapi\fR: \fBrest_cherrypy\fR / \fBrest_tornado\fR).
+It provides both a drop-in Salt-native CLI shortcut (\fBsapi '*' test.ping\fR) and structured subcommands for synchronous, asynchronous, and batch executions, job inspection, minion grain queries, Master runners, Wheel key management, real-time Server-Sent Events (SSE), webhooks, multi-profile management, and an embedded Model Context Protocol (MCP) server over \fBstdio\fR.
+.SH USAGE MODES
+.TP
+\fB1. Direct Salt-Native Shortcut Mode\fR
+If the first positional argument is not a reserved subcommand, \fBsapi\fR automatically treats it as a target expression followed by a Salt execution module and optional arguments:
+.PP
+.nf
+.RS
+sapi '*' test.ping
+sapi -G 'os_family:Debian' pkg.install htop refresh=True
+sapi -L 'web-01,web-02' service.restart nginx
+sapi --async --wait '*' state.apply common test=True
+sapi -b 25% '*' state.highstate
+.RE
+.fi
+.TP
+\fB2. Structured Subcommand Mode\fR
+Explicitly invoke subcommands (\fBrun\fR, \fBasync\fR, \fBbatch\fR, \fBjob\fR, \fBminion\fR, \fBrunner\fR, \fBwheel\fR, \fBkey\fR, \fBevent\fR, \fBprofile\fR, \fBauth\fR, \fBstats\fR, \fBmcp\fR).
+.TP
+\fB3. Full-Access MCP Server Mode\fR
+Run \fBsapi mcp\fR (or \fBsapi --mcp\fR) to start a JSON-RPC 2.0 Model Context Protocol server over \fBstdio\fR for AI coding and operations agents (Claude Code, Gemini CLI, Cursor, Google Antigravity).
+.SH GLOBAL OPTIONS
+.TP
+\fB\-\-ca\-bundle\fR \fISTRING\fR
+Path to custom CA certificate bundle PEM (env: SALT_API_CA_BUNDLE)
+.TP
+\fB\-c\fR, \fB\-\-config\fR \fISTRING\fR
+Path to config.toml (default: ~/.config/sapi/config.toml)
+.TP
+\fB\-\-eauth\fR \fISTRING\fR
+Salt external auth backend: pam, ldap, file, sharedsecret (env: SALT_API_EAUTH)
+.TP
+\fB\-k\fR, \fB\-\-insecure\fR
+Skip TLS certificate verification (env: SALT_API_INSECURE)
+.TP
+\fB\-\-mcp\fR
+Start the integrated MCP server over stdio
+.TP
+\fB\-\-no\-color\fR
+Disable ANSI color output
+.TP
+\fB\-o\fR, \fB\-\-output\fR \fISTRING\fR
+Output format: pretty, json, yaml, table (env: SALT_API_OUTPUT)
+.TP
+\fB\-\-password\fR \fISTRING\fR
+Salt API password (env: SALT_API_PASSWORD)
+.TP
+\fB\-p\fR, \fB\-\-profile\fR \fISTRING\fR
+Configuration profile name (env: SALT_API_PROFILE)
+.TP
+\fB\-t\fR, \fB\-\-timeout\fR \fIDURATION\fR
+HTTP request timeout, e.g. 60s (env: SALT_API_TIMEOUT)
+.TP
+\fB\-\-token\fR \fISTRING\fR
+Explicit X\-Auth\-Token override (env: SALT_API_TOKEN)
+.TP
+\fB\-u\fR, \fB\-\-url\fR \fISTRING\fR
+Salt API base URL, e.g. https://salt:8000 (env: SALT_API_URL)
+.TP
+\fB\-\-user\fR \fISTRING\fR
+Salt API username (env: SALT_API_USER)
+.SH TARGETING OPTIONS (RUN / SHORTCUT MODE)
+.TP
+\fB\-G\fR, \fB\-\-grain\fR
+Match targets using Salt Grains (e.g. \fB'os_family:Debian'\fR).
+.TP
+\fB\-E\fR, \fB\-\-pcre\fR
+Match targets using PCRE regular expressions (e.g. \fB'web\-(prod|stg)\-[0-9]+'\fR).
+.TP
+\fB\-L\fR, \fB\-\-list\fR
+Match targets as a comma-separated list of minion IDs (e.g. \fB'minion1,minion2'\fR).
+.TP
+\fB\-I\fR, \fB\-\-pillar\fR
+Match targets using Salt Pillar values.
+.TP
+\fB\-C\fR, \fB\-\-compound\fR
+Match targets using a Salt compound expression (e.g. \fB'G@os:Debian and not L@web-01'\fR).
+.TP
+\fB\-N\fR, \fB\-\-nodegroup\fR
+Match targets using a Salt Master nodegroup name.
+.TP
+\fB\-S\fR, \fB\-\-ipcidr\fR
+Match targets by subnet or IPv4/IPv6 CIDR (e.g. \fB'10.0.1.0/24'\fR).
+.TP
+\fB\-b\fR, \fB\-\-batch\fR \fISIZE\fR
+Execute progressively in batches (e.g. \fB25%%\fR or \fB5\fR) via \fBlocal_batch\fR.
+.TP
+\fB\-\-async\fR
+Dispatch asynchronously via \fBlocal_async\fR and return the Job ID (\fBjid\fR).
+.TP
+\fB\-\-wait\fR
+Wait and poll \fB/jobs/<jid>\fR until all targeted minions return or timeout expires.
+.SH SUBCOMMANDS
+.TP
+\fBsapi async\fR
+Execute a Salt module asynchronously (local_async) and return JID (or \-\-wait)
+.TP
+\fBsapi auth\fR
+Manage Salt NetAPI authentication tokens (login, status, logout)
+.TP
+\fBsapi batch\fR
+Execute a Salt module in progressive batches (local_batch)
+.TP
+\fBsapi completion\fR
+Generate the autocompletion script for the specified shell
+.TP
+\fBsapi event\fR
+Stream real\-time Salt events (/events SSE) or trigger webhooks (/hook/<tag>)
+.TP
+\fBsapi job\fR
+Inspect and wait on Salt jobs (/jobs, /jobs/<jid>, jobs.active)
+.TP
+\fBsapi key\fR
+Manage Salt minion keys via Master wheel (list, accept, reject, delete, finger)
+.TP
+\fBsapi man\fR
+Generate roff man pages for sapi and its subcommands
+.TP
+\fBsapi mcp\fR
+Start the integrated Full\-Access Salt MCP server over stdio
+.TP
+\fBsapi minion\fR
+Inspect minions, grains inventory, and connectivity status
+.TP
+\fBsapi profile\fR
+Manage Salt Master connection profiles in ~/.config/sapi/config.toml
+.TP
+\fBsapi run\fR
+Execute a Salt module on targeted minions (local, local_async, or local_batch)
+.TP
+\fBsapi runner\fR
+Execute a Salt Master runner module (client=runner or runner_async)
+.TP
+\fBsapi stats\fR
+Retrieve salt\-api server statistics (/stats)
+.TP
+\fBsapi version\fR
+Print sapi version
+.TP
+\fBsapi wheel\fR
+Execute a Salt Master wheel function (client=wheel or wheel_async)
+.SH MCP SERVER TOOLS
+When started with \fBsapi mcp\fR, the following 12 Full-Access tools are exposed over \fBstdio\fR (all tools accept an optional \fBprofile\fR parameter):
+.IP "\[bu]" 2
+\fBsalt_list_profiles\fR \- List configured Salt Master profiles and default profile.
+.IP "\[bu]" 2
+\fBsalt_ping\fR \- Test connectivity (\fBtest.ping\fR) on targeted minions.
+.IP "\[bu]" 2
+\fBsalt_run\fR \- Execute any Salt execution module (\fBlocal\fR, \fBlocal_async\fR, \fBlocal_batch\fR).
+.IP "\[bu]" 2
+\fBsalt_state_apply\fR \- Apply a Salt state or \fBhighstate\fR (\fBtest\fR, \fBpillar\fR, \fBsaltenv\fR, \fBwait\fR).
+.IP "\[bu]" 2
+\fBsalt_list_minions\fR \- List known minions and grains or online/offline status (\fBmanage.status\fR).
+.IP "\[bu]" 2
+\fBsalt_get_minion_grains\fR \- Retrieve full or filtered grains for a minion.
+.IP "\[bu]" 2
+\fBsalt_list_jobs\fR \- List job history (\fB/jobs\fR) or currently active jobs (\fBjobs.active\fR).
+.IP "\[bu]" 2
+\fBsalt_get_job\fR \- Retrieve detailed job return data by \fBjid\fR (with optional \fBwait=true\fR).
+.IP "\[bu]" 2
+\fBsalt_runner\fR \- Execute any Salt Master Runner module (\fBmanage.*\fR, \fBstate.orchestrate\fR, etc.).
+.IP "\[bu]" 2
+\fBsalt_wheel\fR \- Execute any Salt Master Wheel function.
+.IP "\[bu]" 2
+\fBsalt_keys_manage\fR \- Manage minion keys (\fBlist\fR, \fBaccept\fR, \fBreject\fR, \fBdelete\fR, \fBfinger\fR).
+.IP "\[bu]" 2
+\fBsalt_send_hook\fR \- Trigger a Salt-API webhook (\fBPOST /hook/<tag>\fR) with a JSON payload.
+.SH ENVIRONMENT
+.TP
+\fBSALT_API_PROFILE\fR
+Active profile name from \fBconfig.toml\fR.
+.TP
+\fBSALT_API_CONFIG\fR
+Custom path to \fBconfig.toml\fR (default: \fB~/.config/sapi/config.toml\fR).
+.TP
+\fBSALT_API_URL\fR
+Salt Master \fBsalt-api\fR base URL (e.g. \fBhttps://salt-master:8000\fR).
+.TP
+\fBSALT_API_USER\fR
+Salt API username.
+.TP
+\fBSALT_API_PASSWORD\fR
+Salt API password.
+.TP
+\fBSALT_API_EAUTH\fR
+Salt external authentication backend (\fBpam\fR, \fBldap\fR, \fBfile\fR, \fBsharedsecret\fR).
+.TP
+\fBSALT_API_TOKEN\fR
+Explicit \fBX-Auth-Token\fR override.
+.TP
+\fBSALT_API_INSECURE\fR
+Set to \fBtrue\fR or \fB1\fR to skip TLS certificate verification.
+.TP
+\fBSALT_API_OUTPUT\fR
+Default output format (\fBpretty\fR, \fBjson\fR, \fByaml\fR, \fBtable\fR).
+.SH FILES
+.TP
+\fI~/.config/sapi/config.toml\fR
+Multi-profile TOML configuration file.
+.TP
+\fI~/.cache/sapi/tokens.json\fR
+Cached \fBX-Auth-Token\fR store (permissions \fB0600\fR).
+.TP
+\fI/tmp/sapi_mcp.log\fR
+Technical log file written when running \fBsapi mcp\fR.
+.SH AUTHOR
+Laurent Labatut <https://github.com/laurentL/salt-api-cli>
+.SH SEE ALSO
+\fBsapi-run\fR(1), \fBsapi-job\fR(1), \fBsapi-minion\fR(1), \fBsapi-key\fR(1), \fBsapi-runner\fR(1), \fBsapi-wheel\fR(1), \fBsapi-event\fR(1), \fBsapi-profile\fR(1), \fBsapi-auth\fR(1), \fBsapi-mcp\fR(1)

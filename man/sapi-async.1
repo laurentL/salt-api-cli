@@ -1,0 +1,102 @@
+.TH "SAPI-ASYNC" "1" "2026-10-15" "sapi 1.0.0" "Salt API CLI Manual"
+.SH NAME
+sapi-async \- Execute a Salt module asynchronously (local_async) and return JID (or \-\-wait)
+.SH SYNOPSIS
+.B sapi sapi async <target> <function> [args...] [flags]
+.SH DESCRIPTION
+Execute a Salt module asynchronously (local_async) and return JID (or \-\-wait)
+.SH OPTIONS
+.TP
+\fB\-\-async\fR
+Start execution asynchronously (local_async) and return JID
+.TP
+\fB\-b\fR, \fB\-\-batch\fR \fISTRING\fR
+Execute in batches of specified size or percentage (e.g. '10%' or '5')
+.TP
+\fB\-C\fR, \fB\-\-compound\fR
+Match targets by compound expression (tgt_type=compound)
+.TP
+\fB\-G\fR, \fB\-\-grain\fR
+Match targets by Salt grains (tgt_type=grain)
+.TP
+\fB\-\-grain\-pcre\fR
+Match targets by Salt grains regex (tgt_type=grain_pcre)
+.TP
+\fB\-S\fR, \fB\-\-ipcidr\fR
+Match targets by subnet/IPv4 address (tgt_type=ipcidr)
+.TP
+\fB\-L\fR, \fB\-\-list\fR
+Match targets as comma\-separated minion list (tgt_type=list)
+.TP
+\fB\-N\fR, \fB\-\-nodegroup\fR
+Match targets by Salt master nodegroup (tgt_type=nodegroup)
+.TP
+\fB\-E\fR, \fB\-\-pcre\fR
+Match targets by PCRE regular expression (tgt_type=pcre)
+.TP
+\fB\-I\fR, \fB\-\-pillar\fR
+Match targets by Salt pillar data (tgt_type=pillar)
+.TP
+\fB\-\-pillar\-pcre\fR
+Match targets by Salt pillar regex (tgt_type=pillar_pcre)
+.TP
+\fB\-\-raw\-args\fR
+Pass all positional and keyword arguments as raw strings without type coercion
+.TP
+\fB\-\-tgt\-type\fR \fISTRING\fR
+Target matching type (glob, pcre, list, grain, grain_pcre, pillar, pillar_pcre, nodegroup, compound, ipcidr)
+.TP
+\fB\-w\fR, \fB\-\-wait\fR
+When running asynchronously, poll /jobs/<jid> until all minions return
+.TP
+\fB\-\-wait\-interval\fR \fIDURATION\fR
+Polling interval when \-\-wait is enabled
+.SH GLOBAL OPTIONS
+.TP
+\fB\-\-ca\-bundle\fR \fISTRING\fR
+Path to custom CA certificate bundle PEM (env: SALT_API_CA_BUNDLE)
+.TP
+\fB\-c\fR, \fB\-\-config\fR \fISTRING\fR
+Path to config.toml (default: ~/.config/sapi/config.toml)
+.TP
+\fB\-\-eauth\fR \fISTRING\fR
+Salt external auth backend: pam, ldap, file, sharedsecret (env: SALT_API_EAUTH)
+.TP
+\fB\-k\fR, \fB\-\-insecure\fR
+Skip TLS certificate verification (env: SALT_API_INSECURE)
+.TP
+\fB\-\-mcp\fR
+Start the integrated MCP server over stdio
+.TP
+\fB\-\-no\-color\fR
+Disable ANSI color output
+.TP
+\fB\-o\fR, \fB\-\-output\fR \fISTRING\fR
+Output format: pretty, json, yaml, table (env: SALT_API_OUTPUT)
+.TP
+\fB\-\-password\fR \fISTRING\fR
+Salt API password (env: SALT_API_PASSWORD)
+.TP
+\fB\-p\fR, \fB\-\-profile\fR \fISTRING\fR
+Configuration profile name (env: SALT_API_PROFILE)
+.TP
+\fB\-t\fR, \fB\-\-timeout\fR \fIDURATION\fR
+HTTP request timeout, e.g. 60s (env: SALT_API_TIMEOUT)
+.TP
+\fB\-\-token\fR \fISTRING\fR
+Explicit X\-Auth\-Token override (env: SALT_API_TOKEN)
+.TP
+\fB\-u\fR, \fB\-\-url\fR \fISTRING\fR
+Salt API base URL, e.g. https://salt:8000 (env: SALT_API_URL)
+.TP
+\fB\-\-user\fR \fISTRING\fR
+Salt API username (env: SALT_API_USER)
+.SH EXAMPLES
+.nf
+.RS
+  sapi async '*' state.highstate
+  sapi async \-\-wait '*' state.highstate
+.RE
+.fi
+.SH SEE ALSO
+\fBsapi\fR(1)

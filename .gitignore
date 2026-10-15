@@ -1,0 +1,46 @@
+# Binaries & build outputs
+/sapi
+/salt-api-cli
+/bin/
+/dist/
+/completions/
+/.gocache/
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+*.deb
+*.buildinfo
+*.changes
+
+# Debian debhelper build artifacts
+/debian/sapi/
+/debian/.debhelper/
+/debian/files
+/debian/*.debhelper*
+/debian/*.substvars
+/debian/debhelper-build-stamp
+
+# Test & coverage artifacts
+*.test
+*.out
+coverage.txt
+coverage.html
+
+# Runtime & local secrets/configs
+*.log
+config.toml
+tokens.json
+*.pem
+*.key
+*.crt
+.env
+
+# IDE & OS files
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.DS_Store

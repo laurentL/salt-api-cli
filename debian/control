@@ -1,0 +1,27 @@
+Source: sapi
+Section: admin
+Priority: optional
+Maintainer: Laurent Labatut <laurentL@users.noreply.github.com>
+Build-Depends: debhelper-compat (= 13)
+Standards-Version: 4.6.2
+Homepage: https://github.com/laurentL/salt-api-cli
+Vcs-Browser: https://github.com/laurentL/salt-api-cli
+Vcs-Git: https://github.com/laurentL/salt-api-cli.git
+Rules-Requires-Root: no
+
+Package: sapi
+Architecture: any
+Depends: ${misc:Depends}, ca-certificates
+Description: SaltStack salt-api hybrid CLI client and Full-Access MCP Server
+ sapi is a fast, standalone command-line client wrapping SaltStack's salt-api
+ (netapi: rest_cherrypy / rest_tornado).
+ .
+ Features:
+  - Drop-in Salt-native shortcut syntax (e.g., "sapi '*' test.ping")
+  - Structured subcommands (run, async, batch, job, minion, runner, wheel,
+    key, event, profile, auth, stats, mcp)
+  - Multi-profile TOML configuration (~/.config/sapi/config.toml) and
+    automatic X-Auth-Token caching (~/.cache/sapi/tokens.json)
+  - Pretty (with highstate summary), JSON, YAML, and Table output renderers
+  - Built-in Full-Access Model Context Protocol (MCP) server over stdio
+    ("sapi mcp") exposing 12 Salt tools for AI coding and ops agents
