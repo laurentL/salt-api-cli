@@ -12,7 +12,7 @@ Build-Depends:
  golang-github-spf13-pflag-dev,
  golang-golang-x-term-dev,
  golang-gopkg-yaml.v3-dev
-Standards-Version: 4.7.2
+Standards-Version: 4.7.4
 Homepage: https://github.com/laurentL/salt-api-cli
 Vcs-Browser: https://github.com/laurentL/salt-api-cli
 Vcs-Git: https://github.com/laurentL/salt-api-cli.git

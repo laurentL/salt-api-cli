@@ -48,8 +48,15 @@ deb: build man
 	find "$$STAGE/usr" -type d -exec chmod 0755 {} +; \
 	find "$$STAGE/usr/share" -type f -exec chmod 0644 {} +; \
 	INSTALLED_KB=$$(du -sk "$$STAGE/usr" | cut -f1); \
-	printf "Package: %s\nVersion: %s-%s\nSection: admin\nPriority: optional\nArchitecture: %s\nInstalled-Size: %s\nDepends: ca-certificates\nMaintainer: Laurent Labatut <laurentL@users.noreply.github.com>\nHomepage: https://github.com/laurentL/salt-api-cli\nDescription: SaltStack salt-api hybrid CLI client and Full-Access MCP Server\n sapi is a fast, standalone command-line client wrapping SaltStack's salt-api\n (netapi: rest_cherrypy / rest_tornado) with an integrated Full-Access MCP\n server over stdio.\n" \
-		"$(BINARY_NAME)" "$(VERSION)" "$(DEB_REV)" "$(ARCH)" "$$INSTALLED_KB" > "$$STAGE/DEBIAN/control"; \
+	{ \
+		printf "Package: %s\nVersion: %s-%s\nSection: admin\nPriority: optional\n" "$(BINARY_NAME)" "$(VERSION)" "$(DEB_REV)"; \
+		printf "Architecture: %s\nInstalled-Size: %s\nDepends: ca-certificates\n" "$(ARCH)" "$$INSTALLED_KB"; \
+		printf "Maintainer: Laurent LABATUT <laurent@labatut.net>\nHomepage: https://github.com/laurentL/salt-api-cli\n"; \
+		printf "Description: SaltStack salt-api hybrid CLI client and Full-Access MCP Server\n"; \
+		printf " sapi is a fast, standalone command-line client wrapping SaltStack's salt-api\n"; \
+		printf " (netapi: rest_cherrypy / rest_tornado) with an integrated Full-Access MCP\n"; \
+		printf " server over stdio.\n"; \
+	} > "$$STAGE/DEBIAN/control"; \
 	DEB_OUT="dist/$(BINARY_NAME)_$(VERSION)-$(DEB_REV)_$(ARCH).deb"; \
 	dpkg-deb --root-owner-group --build "$$STAGE" "$$DEB_OUT"; \
 	echo "Built Debian package: $$DEB_OUT"
