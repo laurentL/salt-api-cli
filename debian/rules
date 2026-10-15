@@ -1,37 +1,27 @@
 #!/usr/bin/make -f
 
-export DH_VERBOSE = 1
-export CGO_ENABLED = 0
-export GOCACHE = $(CURDIR)/.gocache
+include /usr/share/dpkg/pkg-info.mk
 
-VERSION ?= $(shell dpkg-parsechangelog -S Version | cut -d- -f1)
-LDFLAGS := -s -w -X github.com/laurentL/salt-api-cli/internal/cli.Version=$(VERSION)
+export DH_VERBOSE = 1
+
+LDFLAGS := -X github.com/laurentL/salt-api-cli/internal/cli.Version=$(DEB_VERSION_UPSTREAM)
 
 %:
-	dh $@
-
-override_dh_auto_clean:
-	rm -rf sapi .gocache completions
+	dh $@ --builddirectory=_build --buildsystem=golang
 
 override_dh_auto_build:
-	go build -ldflags "$(LDFLAGS)" -o sapi ./cmd/sapi
-	./sapi man --dir man
-	mkdir -p completions
-	./sapi completion bash > completions/sapi.bash
-	./sapi completion zsh > completions/_sapi
-	./sapi completion fish > completions/sapi.fish
-
-override_dh_auto_test:
-	go test -v ./...
+	dh_auto_build -- -ldflags "$(LDFLAGS)"
+	_build/bin/sapi man --dir man
+	mkdir -p _build/completions
+	_build/bin/sapi completion bash > _build/completions/sapi.bash
+	_build/bin/sapi completion zsh > _build/completions/_sapi
+	_build/bin/sapi completion fish > _build/completions/sapi.fish
 
 override_dh_auto_install:
-	install -D -m 0755 sapi $(CURDIR)/debian/sapi/usr/bin/sapi
-	install -D -m 0644 completions/sapi.bash $(CURDIR)/debian/sapi/usr/share/bash-completion/completions/sapi
-	install -D -m 0644 completions/_sapi $(CURDIR)/debian/sapi/usr/share/zsh/vendor-completions/_sapi
-	install -D -m 0644 completions/sapi.fish $(CURDIR)/debian/sapi/usr/share/fish/vendor_completions.d/sapi.fish
+	dh_auto_install -- --no-source
+	install -D -m 0644 _build/completions/sapi.bash $(CURDIR)/debian/sapi/usr/share/bash-completion/completions/sapi
+	install -D -m 0644 _build/completions/_sapi $(CURDIR)/debian/sapi/usr/share/zsh/vendor-completions/_sapi
+	install -D -m 0644 _build/completions/sapi.fish $(CURDIR)/debian/sapi/usr/share/fish/vendor_completions.d/sapi.fish
 
 override_dh_dwz:
-	# Skip dwz on stripped Go static binaries
-
-override_dh_strip:
-	# Already stripped via Go -ldflags "-s -w"
+	# Skip dwz on Go binaries

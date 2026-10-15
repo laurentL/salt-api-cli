@@ -1,9 +1,5 @@
 sapi (1.0.0-1) unstable; urgency=medium
 
-  * Initial release of sapi:
-    - SaltStack salt-api (netapi) hybrid CLI client (shortcut & structured modes).
-    - Multi-profile configuration, secret resolution, and 0600 token cache.
-    - Full-Access MCP stdio server with 12 Salt tools.
-    - Manual pages (sapi(1) and sapi-*(1)) and shell completions (bash/zsh/fish).
+  * Initial release (Closes: #1150985)
 
- -- Laurent Labatut <laurentL@users.noreply.github.com>  Thu, 15 Oct 2026 13:30:00 +0200
+ -- Laurent LABATUT <laurent@labatut.net>  Thu, 15 Oct 2026 13:55:00 +0200
