@@ -240,3 +240,41 @@ func TestSaltClientFullFlow(t *testing.T) {
 		t.Errorf("unexpected hook response: %v", hookRes)
 	}
 }
+
+func TestLowStateWheelAlwaysSendsArgAndKwarg(t *testing.T) {
+	cases := []struct {
+		name      string
+		state     LowState
+		wantArg   string
+		wantKwarg string
+	}{
+		{"kwarg only (key delete)", LowState{Client: ClientWheel, Fun: "key.delete", Kwarg: map[string]any{"match": "web-01"}}, `[]`, `{"match":"web-01"}`},
+		{"positional only (sapi wheel key.delete web-01)", LowState{Client: ClientWheel, Fun: "key.delete", Arg: []any{"web-01"}}, `["web-01"]`, `{}`},
+		{"no args async", LowState{Client: ClientWheelAsync, Fun: "key.list_all"}, `[]`, `{}`},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			raw, err := json.Marshal([]LowState{tc.state})
+			if err != nil {
+				t.Fatal(err)
+			}
+			var got []map[string]json.RawMessage
+			if err := json.Unmarshal(raw, &got); err != nil {
+				t.Fatal(err)
+			}
+			if string(got[0]["arg"]) != tc.wantArg || string(got[0]["kwarg"]) != tc.wantKwarg {
+				t.Errorf("payload %s: want arg=%s kwarg=%s", raw, tc.wantArg, tc.wantKwarg)
+			}
+			if string(got[0]["fun"]) != `"`+tc.state.Fun+`"` {
+				t.Errorf("payload %s: fun lost", raw)
+			}
+		})
+	}
+
+	raw, _ := json.Marshal(LowState{Client: ClientLocal, Tgt: "*", Fun: "test.ping"})
+	var local map[string]any
+	_ = json.Unmarshal(raw, &local)
+	if _, ok := local["arg"]; ok {
+		t.Errorf("non-wheel client should keep omitempty arg: %s", raw)
+	}
+}

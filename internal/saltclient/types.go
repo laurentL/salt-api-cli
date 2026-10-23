@@ -51,6 +51,30 @@ type LowState struct {
 	Match      any            `json:"match,omitempty"` // Used by wheel functions such as key.accept / key.delete
 }
 
+// MarshalJSON always emits both "arg" and "kwarg" for wheel clients: Salt's
+// SyncClientMixin.low() only honours them when both keys are present, otherwise
+// it falls back to top-level keys and silently drops the arguments
+// (e.g. "delete takes at least 1 argument" for key.delete).
+func (s LowState) MarshalJSON() ([]byte, error) {
+	type plain LowState
+	if s.Client != ClientWheel && s.Client != ClientWheelAsync {
+		return json.Marshal(plain(s))
+	}
+	arg := s.Arg
+	if arg == nil {
+		arg = []any{}
+	}
+	kwarg := s.Kwarg
+	if kwarg == nil {
+		kwarg = map[string]any{}
+	}
+	return json.Marshal(struct {
+		plain
+		Arg   []any          `json:"arg"`
+		Kwarg map[string]any `json:"kwarg"`
+	}{plain(s), arg, kwarg})
+}
+
 // LoginRequest is the payload sent to POST /login.
 type LoginRequest struct {
 	Username string `json:"username"`
