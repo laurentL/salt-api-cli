@@ -97,6 +97,9 @@ func TestSaltClientFullFlow(t *testing.T) {
 					},
 				},
 			})
+		case ClientWheelAsync:
+			w.WriteHeader(http.StatusBadRequest)
+			_, _ = w.Write([]byte(cherryPyErrorPage))
 		case ClientWheel:
 			_ = json.NewEncoder(w).Encode(map[string]any{
 				"return": []any{
@@ -218,6 +221,12 @@ func TestSaltClientFullFlow(t *testing.T) {
 		t.Errorf("unexpected ListKeys result: %v", keysRes)
 	}
 
+	// 3b. HTML error pages are reduced to their message
+	if _, err := client.RunWheelAsync(ctx, "key.list_all", nil, nil); err == nil ||
+		err.Error() != "salt-api error POST / (HTTP 400): Client disabled: 'wheel_async'. Add to 'netapi_enable_clients' master config option to enable." {
+		t.Errorf("unexpected wheel_async error: %v", err)
+	}
+
 	// 4. StreamEvents
 	var events []Event
 	err = client.StreamEvents(ctx, "salt/job/*", 1, func(ev Event) error {
@@ -276,5 +285,44 @@ func TestLowStateWheelAlwaysSendsArgAndKwarg(t *testing.T) {
 	_ = json.Unmarshal(raw, &local)
 	if _, ok := local["arg"]; ok {
 		t.Errorf("non-wheel client should keep omitempty arg: %s", raw)
+	}
+}
+
+const cherryPyErrorPage = `<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8"></meta>
+    <title>400 Bad Request</title>
+    <style type="text/css">
+    #powered_by { margin-top: 20px; }
+    </style>
+</head>
+    <body>
+        <h2>400 Bad Request</h2>
+        <p>Client disabled: &#x27;wheel_async&#x27;. Add to &#x27;netapi_enable_clients&#x27; master config option to enable.</p>
+        <pre id="traceback"></pre>
+    <div id="powered_by">
+      <span>
+        Powered by <a href="http://www.cherrypy.dev">CherryPy 18.8.0</a>
+      </span>
+    </div>
+    </body>
+</html>`
+
+func TestErrorMessage(t *testing.T) {
+	cases := []struct {
+		name, body, want string
+	}{
+		{"cherrypy page", cherryPyErrorPage, "Client disabled: 'wheel_async'. Add to 'netapi_enable_clients' master config option to enable."},
+		{"empty paragraph falls back to title", "<html><head><title>500 Internal Server Error</title></head><body><p> </p></body></html>", "500 Internal Server Error"},
+		{"plain text kept", "  401 Unauthorized\n", "401 Unauthorized"},
+		{"json kept", `{"return": "nope"}`, `{"return": "nope"}`},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			if got := errorMessage([]byte(tc.body)); got != tc.want {
+				t.Errorf("errorMessage() = %q, want %q", got, tc.want)
+			}
+		})
 	}
 }

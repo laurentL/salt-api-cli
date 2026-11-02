@@ -8,9 +8,11 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"html"
 	"io"
 	"net/http"
 	"os"
+	"regexp"
 	"strings"
 
 	"github.com/laurentL/salt-api-cli/internal/auth"
@@ -119,7 +121,7 @@ func (c *Client) Login(ctx context.Context) (*auth.CachedToken, error) {
 	}
 
 	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
-		return nil, fmt.Errorf("authentication failed on %s (HTTP %d): %s", c.profile.URL, resp.StatusCode, strings.TrimSpace(string(respData)))
+		return nil, fmt.Errorf("authentication failed on %s (HTTP %d): %s", c.profile.URL, resp.StatusCode, errorMessage(respData))
 	}
 
 	var loginResp LoginResponse
@@ -254,7 +256,7 @@ func (c *Client) doJSON(ctx context.Context, method, path string, payload any, o
 		}
 
 		if resp.StatusCode < 200 || resp.StatusCode >= 300 {
-			return nil, fmt.Errorf("salt-api error %s %s (HTTP %d): %s", method, path, resp.StatusCode, strings.TrimSpace(string(respBytes)))
+			return nil, fmt.Errorf("salt-api error %s %s (HTTP %d): %s", method, path, resp.StatusCode, errorMessage(respBytes))
 		}
 
 		if out != nil && len(respBytes) > 0 {
@@ -266,6 +268,31 @@ func (c *Client) doJSON(ctx context.Context, method, path string, payload any, o
 	}
 
 	return nil, errors.New("authentication failed after token refresh retry")
+}
+
+var (
+	htmlParagraphRe = regexp.MustCompile(`(?is)<p[^>]*>(.*?)</p>`)
+	htmlTitleRe     = regexp.MustCompile(`(?is)<title[^>]*>(.*?)</title>`)
+	htmlTagRe       = regexp.MustCompile(`<[^>]*>`)
+)
+
+// errorMessage turns a salt-api error body into a readable message. CherryPy
+// answers errors with a full HTML page, so only its <p> (or <title>) text is kept.
+func errorMessage(body []byte) string {
+	s := strings.TrimSpace(string(body))
+	lower := strings.ToLower(s)
+	if !strings.HasPrefix(lower, "<!doctype html") && !strings.Contains(lower, "<html") {
+		return s
+	}
+	for _, re := range []*regexp.Regexp{htmlParagraphRe, htmlTitleRe} {
+		for _, m := range re.FindAllStringSubmatch(s, -1) {
+			text := strings.Join(strings.Fields(html.UnescapeString(htmlTagRe.ReplaceAllString(m[1], " "))), " ")
+			if text != "" {
+				return text
+			}
+		}
+	}
+	return s
 }
 
 func firstNonEmpty(vals ...string) string {
