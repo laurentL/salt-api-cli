@@ -132,7 +132,10 @@ Execute progressively in batches (e.g. \fB25%%\fR or \fB5\fR) via \fBlocal_batch
 Dispatch asynchronously via \fBlocal_async\fR and return the Job ID (\fBjid\fR).
 .TP
 \fB\-\-wait\fR
-Wait and poll \fB/jobs/<jid>\fR until all targeted minions return or timeout expires.
+Wait and poll \fB/jobs/<jid>\fR until all targeted minions return, the job turns out to be unknown to the master, or \fB\-\-wait\-timeout\fR expires.
+.TP
+\fB\-\-wait\-timeout\fR \fIDURATION\fR
+Maximum time to wait with \fB\-\-wait\fR (default \fB1h\fR, \fB0\fR for no limit).
 .SH SUBCOMMANDS
 `)
 
@@ -160,7 +163,7 @@ When started with \fBsapi mcp\fR, the following 12 Full-Access tools are exposed
 .IP "\[bu]" 2
 \fBsalt_list_jobs\fR \- List job history (\fB/jobs\fR) or currently active jobs (\fBjobs.active\fR).
 .IP "\[bu]" 2
-\fBsalt_get_job\fR \- Retrieve detailed job return data by \fBjid\fR (with optional \fBwait=true\fR).
+\fBsalt_get_job\fR \- Retrieve detailed job return data by \fBjid\fR (with optional \fBwait=true\fR). Waiting tools (\fBsalt_run\fR, \fBsalt_state_apply\fR, \fBsalt_get_job\fR) stop after \fBwait_timeout\fR seconds (default 600, max 7200).
 .IP "\[bu]" 2
 \fBsalt_runner\fR \- Execute any Salt Master Runner module (\fBmanage.*\fR, \fBstate.orchestrate\fR, etc.).
 .IP "\[bu]" 2

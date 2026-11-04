@@ -67,6 +67,7 @@ var flagsTakingValue = map[string]bool{
 	"--batch":         true,
 	"--tgt-type":      true,
 	"--wait-interval": true,
+	"--wait-timeout":  true,
 }
 
 // NewRootCmd constructs the root Cobra command for sapi.

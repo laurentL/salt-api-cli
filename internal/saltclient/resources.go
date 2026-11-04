@@ -3,6 +3,7 @@ package saltclient
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"strings"
 	"time"
@@ -45,7 +46,28 @@ func (c *Client) GetJob(ctx context.Context, jid string) (*JobLookupResponse, er
 	return &resp, nil
 }
 
+// ErrJobNotFound is returned by WaitJob when the master keeps answering that it has no job with this jid
+// (unknown jid, or a job already purged from the job cache by keep_jobs).
+var ErrJobNotFound = errors.New("job not found")
+
+// jobNotFoundPolls is the number of consecutive "no job with this jid" answers WaitJob tolerates before
+// giving up. The grace covers a lookup racing the job cache write right after local_async.
+const jobNotFoundPolls = 5
+
+// jobLookupError returns the error reported by the master in the job info (e.g. "Cannot contact returner
+// or no job with this jid"), or "" when the job is known.
+func jobLookupError(resp *JobLookupResponse) string {
+	for _, info := range resp.Info {
+		if msg, ok := info["Error"].(string); ok && msg != "" {
+			return msg
+		}
+	}
+	return ""
+}
+
 // WaitJob polls GET /jobs/<jid> until all expected minions have returned results or ctx expires.
+// It fails with ErrJobNotFound when the master keeps reporting that the job does not exist, so
+// callers never poll forever on an unknown or purged jid. Callers should still bound ctx.
 func (c *Client) WaitJob(ctx context.Context, jid string, expectedMinions []string, pollInterval time.Duration) (map[string]any, error) {
 	if pollInterval <= 0 {
 		pollInterval = 1500 * time.Millisecond
@@ -62,10 +84,21 @@ func (c *Client) WaitJob(ctx context.Context, jid string, expectedMinions []stri
 	defer ticker.Stop()
 
 	var lastResult map[string]any
+	notFound := 0
 
 	for {
 		jobResp, err := c.GetJob(ctx, jid)
 		if err == nil && jobResp != nil {
+			hasReturn := len(jobResp.Return) > 0 && len(jobResp.Return[0]) > 0
+			if msg := jobLookupError(jobResp); msg != "" && !hasReturn {
+				notFound++
+				if notFound >= jobNotFoundPolls {
+					return nil, fmt.Errorf("%w: %s (%s)", ErrJobNotFound, jid, msg)
+				}
+			} else {
+				notFound = 0
+			}
+
 			// Populate expected minions from job info if not known initially
 			if len(expectedSet) == 0 && len(jobResp.Info) > 0 {
 				if minionsRaw, ok := jobResp.Info[0]["Minions"].([]any); ok {

@@ -103,7 +103,13 @@ func executeSaltRun(ctx context.Context, state *AppState, tf *TargetFlags, args 
 		}
 
 		fmt.Fprintf(os.Stderr, "Started async job JID %s on %d minion(s), waiting for results...\n", asyncRes.JID, len(asyncRes.Minions))
-		waitRes, err := client.WaitJob(ctx, asyncRes.JID, asyncRes.Minions, tf.WaitInterval)
+		waitCtx := ctx
+		if tf.WaitTimeout > 0 {
+			var cancel context.CancelFunc
+			waitCtx, cancel = context.WithTimeout(ctx, tf.WaitTimeout)
+			defer cancel()
+		}
+		waitRes, err := client.WaitJob(waitCtx, asyncRes.JID, asyncRes.Minions, tf.WaitInterval)
 		if err != nil {
 			if waitRes != nil {
 				_ = state.render(resolved, waitRes)

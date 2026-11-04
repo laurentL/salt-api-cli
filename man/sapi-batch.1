@@ -1,4 +1,4 @@
-.TH "SAPI-BATCH" "1" "2026-10-15" "sapi 1.0.0" "Salt API CLI Manual"
+.TH "SAPI-BATCH" "1" "2026-11-04" "sapi 1.0.0" "Salt API CLI Manual"
 .SH NAME
 sapi-batch \- Execute a Salt module in progressive batches (local_batch)
 .SH SYNOPSIS
@@ -51,6 +51,9 @@ When running asynchronously, poll /jobs/<jid> until all minions return
 .TP
 \fB\-\-wait\-interval\fR \fIDURATION\fR
 Polling interval when \-\-wait is enabled
+.TP
+\fB\-\-wait\-timeout\fR \fIDURATION\fR
+Maximum time to wait when \-\-wait is enabled (0 = no limit)
 .SH GLOBAL OPTIONS
 .TP
 \fB\-\-ca\-bundle\fR \fISTRING\fR

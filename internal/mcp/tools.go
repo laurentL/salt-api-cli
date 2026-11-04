@@ -109,6 +109,7 @@ func RegisterTools(s *MCPServer, baseOverrides config.Overrides, logger *log.Log
 			WithString("batch", Description("Optional batch size or percentage (e.g. '10%' or '5') to use local_batch")),
 			WithBoolean("async", Description("Run asynchronously via local_async")),
 			WithBoolean("wait", Description("If async=true, poll /jobs/<jid> until all minions return")),
+			waitTimeoutOption(),
 			WithString("profile", Description("Optional Salt Master profile name")),
 		),
 		func(ctx context.Context, req CallToolRequest) (*CallToolResult, error) {
@@ -158,7 +159,9 @@ func RegisterTools(s *MCPServer, baseOverrides config.Overrides, logger *log.Log
 				if !wait {
 					return jsonToolResult(asyncRes)
 				}
-				waitRes, err := client.WaitJob(ctx, asyncRes.JID, asyncRes.Minions, 1500*time.Millisecond)
+				waitCtx, cancel := waitContext(ctx, req)
+				defer cancel()
+				waitRes, err := client.WaitJob(waitCtx, asyncRes.JID, asyncRes.Minions, 1500*time.Millisecond)
 				if err != nil {
 					return NewToolResultError(err.Error()), nil
 				}
@@ -187,6 +190,7 @@ func RegisterTools(s *MCPServer, baseOverrides config.Overrides, logger *log.Log
 			WithString("saltenv", Description("Optional Salt environment (e.g. 'base', 'prod')")),
 			WithString("tgt_type", Description("Target matching type (default 'glob')"), DefaultString("glob")),
 			WithBoolean("wait", Description("Run via local_async and wait for completion")),
+			waitTimeoutOption(),
 			WithString("profile", Description("Optional Salt Master profile name")),
 		),
 		func(ctx context.Context, req CallToolRequest) (*CallToolResult, error) {
@@ -226,7 +230,9 @@ func RegisterTools(s *MCPServer, baseOverrides config.Overrides, logger *log.Log
 				if err != nil {
 					return NewToolResultError(err.Error()), nil
 				}
-				res, err := client.WaitJob(ctx, asyncRes.JID, asyncRes.Minions, 1500*time.Millisecond)
+				waitCtx, cancel := waitContext(ctx, req)
+				defer cancel()
+				res, err := client.WaitJob(waitCtx, asyncRes.JID, asyncRes.Minions, 1500*time.Millisecond)
 				if err != nil {
 					return NewToolResultError(err.Error()), nil
 				}
@@ -392,6 +398,7 @@ func RegisterTools(s *MCPServer, baseOverrides config.Overrides, logger *log.Log
 			WithDescription("Inspect the execution metadata and minion return values for a Salt job (/jobs/<jid>)."),
 			WithString("jid", Required(), Description("Salt Job ID (JID)")),
 			WithBoolean("wait", Description("If true, polls until all targeted minions finish before returning")),
+			waitTimeoutOption(),
 			WithString("profile", Description("Optional Salt Master profile name")),
 		),
 		func(ctx context.Context, req CallToolRequest) (*CallToolResult, error) {
@@ -407,7 +414,9 @@ func RegisterTools(s *MCPServer, baseOverrides config.Overrides, logger *log.Log
 				return NewToolResultError(err.Error()), nil
 			}
 			if wait {
-				res, err := client.WaitJob(ctx, jid, nil, 1500*time.Millisecond)
+				waitCtx, cancel := waitContext(ctx, req)
+				defer cancel()
+				res, err := client.WaitJob(waitCtx, jid, nil, 1500*time.Millisecond)
 				if err != nil {
 					return NewToolResultError(err.Error()), nil
 				}
@@ -605,4 +614,31 @@ func jsonToolResult(data any) (*CallToolResult, error) {
 		return NewToolResultError(fmt.Sprintf("failed to serialize result: %v", err)), nil
 	}
 	return NewToolResultText(string(b)), nil
+}
+
+const (
+	// defaultWaitTimeout bounds every waiting MCP tool call: the stdio server handles one request at a
+	// time, so an endless poll would block the whole server and keep hammering salt-api.
+	defaultWaitTimeout = 10 * time.Minute
+	// maxWaitTimeout caps the wait_timeout an agent may request.
+	maxWaitTimeout = 2 * time.Hour
+)
+
+// waitTimeoutOption declares the wait_timeout parameter shared by the waiting tools.
+func waitTimeoutOption() ToolOption {
+	return WithNumber("wait_timeout", Description(fmt.Sprintf(
+		"Maximum seconds to wait when wait=true (default %d, max %d). On timeout the error carries the jid: check it later with salt_get_job.",
+		int(defaultWaitTimeout/time.Second), int(maxWaitTimeout/time.Second))))
+}
+
+// waitContext derives the context bounding a WaitJob call from the wait_timeout argument.
+func waitContext(ctx context.Context, req CallToolRequest) (context.Context, context.CancelFunc) {
+	timeout := time.Duration(req.GetInt("wait_timeout", 0)) * time.Second
+	if timeout <= 0 {
+		timeout = defaultWaitTimeout
+	}
+	if timeout > maxWaitTimeout {
+		timeout = maxWaitTimeout
+	}
+	return context.WithTimeout(ctx, timeout)
 }

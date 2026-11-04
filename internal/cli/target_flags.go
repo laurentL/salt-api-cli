@@ -23,6 +23,7 @@ type TargetFlags struct {
 	Async        bool
 	Wait         bool
 	WaitInterval time.Duration
+	WaitTimeout  time.Duration
 	RawArgs      bool
 }
 
@@ -43,6 +44,7 @@ func (tf *TargetFlags) AddTargetFlags(cmd *cobra.Command) {
 	f.BoolVar(&tf.Async, "async", false, "Start execution asynchronously (local_async) and return JID")
 	f.BoolVarP(&tf.Wait, "wait", "w", false, "When running asynchronously, poll /jobs/<jid> until all minions return")
 	f.DurationVar(&tf.WaitInterval, "wait-interval", 1500*time.Millisecond, "Polling interval when --wait is enabled")
+	f.DurationVar(&tf.WaitTimeout, "wait-timeout", time.Hour, "Maximum time to wait when --wait is enabled (0 = no limit)")
 	f.BoolVar(&tf.RawArgs, "raw-args", false, "Pass all positional and keyword arguments as raw strings without type coercion")
 }
 
